@@ -40,12 +40,13 @@ int main(int argNum,int *arg[]){
 }
 
 void screenSaver(bool chromatic){//rewrite to work for 20x80 (standard) terminals, lookat paper
-	int pair_num=1;
+	int pair_num=1,startY=0,startX=1;
 
 	halfdelay(1);
 	curs_set(0);
 	currChar=getch();
-	move(0,1);
+	move(startY,startX);
+	getyx(stdscr,currY,currX);
 	if(chromatic==true){
 		init_pair(pair_num,COLOR_RED,COLOR_BLUE);
 		attron(COLOR_PAIR(pair_num));
@@ -53,13 +54,15 @@ void screenSaver(bool chromatic){//rewrite to work for 20x80 (standard) terminal
 	}
 	
 	while(currChar!='q'){
-		getyx(stdscr,currY,currX);
-		currY+=1,currX+=1;
-		if(currY==maxY){
-			currY=0;
+		currY+=1,currX+=2;
+		if(currY>=maxY){
+			currY-=maxY;
 		}
-		if(currX==maxX){
-			currX=0;
+		if(currX>=maxX){
+			currX-=maxX;
+		}
+		if(currY==startY&&currX==startX){
+			currX++,startX++;
 		}
 		mvprintw(currY,currX,"*");
 		if(chromatic==true){
