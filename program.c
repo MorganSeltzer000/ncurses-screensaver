@@ -1,8 +1,11 @@
 #include <ncurses.h>
 #include <stdlib.h>
 #include <time.h>
+#include <math.h>
 
 void screenSaver(bool chromatic);
+void factorize(int y,int x,int factors[]);
+
 int maxY,maxX,currChar,currY,currX;
 int main(int argNum,int *arg[]){
 	int ch1,ch2;
@@ -39,8 +42,9 @@ int main(int argNum,int *arg[]){
 	return 0;
 }
 
-void screenSaver(bool chromatic){//rewrite to work for 20x80 (standard) terminals, lookat paper
+void screenSaver(bool chromatic){
 	int pair_num=1,startY=0,startX=1;
+	int factors[]={1,1};
 
 	halfdelay(1);
 	curs_set(0);
@@ -52,9 +56,12 @@ void screenSaver(bool chromatic){//rewrite to work for 20x80 (standard) terminal
 		attron(COLOR_PAIR(pair_num));
 		srand(time(0));//unfortunately I can't find a better option, I know its bad
 	}
-	
+	factorize(maxY,maxX,factors);
+	int step=factors[0];
+	int reps=0;
+
 	while(currChar!='q'){
-		currY+=1,currX+=2;
+		currY+=1,currX+=1;
 		if(currY>=maxY){
 			currY-=maxY;
 		}
@@ -62,12 +69,17 @@ void screenSaver(bool chromatic){//rewrite to work for 20x80 (standard) terminal
 			currX-=maxX;
 		}
 		if(currY==startY&&currX==startX){
-			currX++,startX++;
+			currX+=step,startX+=step;
+			reps++;
+			if(reps==factors[1]){
+				currX++,startX++;
+				reps=0;
+			}
 		}
 		mvprintw(currY,currX,"*");
 		if(chromatic==true){
 			if(pair_num<COLOR_PAIRS){
-				init_pair(++pair_num,rand()%COLORS,rand()%COLORS);
+				init_pair(++pair_num,rand()%(COLORS-1)+1,rand()%(COLORS-1)+1);//avoids black
 			}else{
 				if(pair_num==COLOR_PAIRS*2){//assuming that we dont get near int limit
 					pair_num=COLOR_PAIRS;
@@ -75,14 +87,42 @@ void screenSaver(bool chromatic){//rewrite to work for 20x80 (standard) terminal
 				pair_num++;
 			}
 			attron(COLOR_PAIR(pair_num%COLOR_PAIRS));
-			if(rand()%2==0){//effectively adds twice the colors
-				attron(A_BLINK);
+			if(rand()%2==0){//effectively adds twice the colors because bold is brighter
+				attron(A_BOLD);
 			}else{
-				attroff(A_BLINK);
+				attroff(A_BOLD);
 			}
 		}
 		currChar=getch();
 	}
+}
 
-
+void factorize(int y,int x,int factors[]){//gets common prime factors of x and y, and creates two composites that are close to each other
+	int position=0;
+	int i=2;
+	int factorArray[31];//max int function can take is 2^31
+	while(i<=y){
+		if(y%i==0){
+			if(x%i==0){
+				x/=i;
+				factorArray[position++]=i;
+			}
+			y/=i;
+		}else{
+			i++;
+		}
+	}
+	while(position>0){
+		position--;
+		if(factors[0]<factors[1]){
+			factors[0]*=factorArray[position];
+		}else{
+			factors[1]*=factorArray[position];
+		}
+	}
+	if(factors[0]>factors[1]){
+		i=factors[0];
+		factors[0]=factors[1];
+		factors[1]=i;
+	}
 }

@@ -6,6 +6,6 @@ Create a screensaver application.
 Components:
 Some type of changing graphic.including
 	-Colors, both background and foreground. Done 4/24.
-	-Changing graphic is able to loop for hours.
+	-Changing graphic is able to loop for hours. Done 5/21.
 Some type of menu to select between different screensavers
 +Some feature to allow someone to code in the center with a screensaver on the edges.
