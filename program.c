@@ -10,6 +10,7 @@ int flames();
 void factorize(int y,int x,int factors[]);
 
 int maxY,maxX,currChar,currY,currX;
+WINDOW *optionsWin;
 bool chromatic=false,rainbow=false;
 int main(int argNum,int *arg[]){
 	int ch1,ch2;
@@ -17,7 +18,10 @@ int main(int argNum,int *arg[]){
 	initscr();
 	cbreak();
 	noecho();
-
+	
+	optionsWin=newwin(2,maxX,0,0);//sets up options menu, so it isn't redrawn every time. Assumes that options text is <= maxX*2
+	mvwprintw(optionsWin,0,0,"1) Starfall 2) Flames r) Go back to previous q) quit");
+	
 	getmaxyx(stdscr,maxY,maxX);
 	if(has_colors){
 		chromatic=true;
@@ -56,7 +60,7 @@ int main(int argNum,int *arg[]){
 	return 0;
 }
 
-void screensaver(int choice){//handles screensavers, so multiple windows don't exist when they're switched between
+void screensaver(int choice){//handles screensavers, to keep the stack to a minimum
 	while(1==1){
 		switch(choice){
 			case 0:
@@ -76,10 +80,11 @@ int options(int previous){//make into new window later
 //	if(chromatic){
 //		color_set(COLOR_PAIR(0),NULL);
 //	}
-	standend();
-	mvprintw(0,0,"1) Starfall 2) Flames r) Go back to previous q) quit");
+//	wstandend(optionsWin);
+	wredrawln(optionsWin,0,2);
+//	mvprintw(0,0,"1) Starfall 2) Flames r) Go back to previous q) quit");
 	while(1==1){
-		switch(getch()){
+		switch(wgetch(optionsWin)){
 			case '1':
 				return 1;
 			case '2':
@@ -94,7 +99,7 @@ int options(int previous){//make into new window later
 }
 
 int starfall(){
-	short pair_num=1,startY=0,startX=1;
+	int pair_num=1,startY=0,startX=1;
 	int factors[]={1,1};
 
 	halfdelay(1);
@@ -102,15 +107,15 @@ int starfall(){
 	standend();
 	erase();
 
-	currChar=getch();
-	move(startY,startX);
-	getyx(stdscr,currY,currX);
+	currChar=' ';//prevents it from being q, without waiting for input
+	currY=startY;
+	currX=startX;
 	if(chromatic==true){
 		srand(time(0));//unfortunately I can't find a better option, I know its bad
 	}
 	factorize(maxY,maxX,factors);
-	short step=factors[0];
-	short reps=0;
+	int step=factors[0];
+	int reps=0;
 
 	while(currChar!='q'){
 		if(currChar=='i'){
@@ -118,6 +123,7 @@ int starfall(){
 			if(tmp!=1){
 				return tmp;
 			}
+			wredrawln(stdscr,0,2);//restores stdscr to normal
 		}
 		if(currY>=maxY){
 			currY-=maxY;
@@ -162,7 +168,7 @@ int flames(){
 	standend();//resets attributes to normal
 	//erase is already done inside program every loop
 
-	currChar=getch();
+	currChar=' ';
 	if(chromatic){
 		if(rainbow){
 			init_color(COLOR_GREEN,1000,500,156);//makes it orange, you can only use predefined color names
