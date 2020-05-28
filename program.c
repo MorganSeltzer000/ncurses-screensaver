@@ -1,7 +1,9 @@
 #include <ncurses.h>
 #include <stdlib.h>
-#include <time.h>
-#include <math.h>
+#include <stdio.h> //for printing error
+#include <time.h> //for rand
+#include <math.h> //for factor
+#include <string.h> //for strcmp
 
 void screensaver(int choice);
 int options(int previous);
@@ -12,14 +14,12 @@ void factorize(int y,int x,int factors[]);
 int maxY,maxX,currChar,currY,currX;
 WINDOW *optionsWin;
 bool chromatic=false,rainbow=false;
-int main(int argNum,int *arg[]){
-	int ch1,ch2;
-
+int main(int argNum,char *arg[]){
 	initscr();
 	cbreak();
 	noecho();
 	
-	optionsWin=newwin(2,maxX,0,0);//sets up options menu, so it isn't redrawn every time. Assumes that options text is <= maxX*2
+	optionsWin=newwin(2,maxX,0,0);//sets up options menu, so it isn't redrawn every time. Assumes that options text is <= maxX*2, if not not all the options text will show
 	mvwprintw(optionsWin,0,0,"1) Starfall 2) Flames r) Go back to previous q) quit");
 	
 	getmaxyx(stdscr,maxY,maxX);
@@ -34,26 +34,58 @@ int main(int argNum,int *arg[]){
 		getch();
 		screensaver(1);
 	}else{
-		printw("%d%d",COLORS,COLOR_PAIRS);
-		mvprintw(1,0,"Do you want color? Y/N");
-		do{
-			currChar=getch();
+		int mode=1;
+		for(int i=1;i<argNum;i++){
+			if(strcmp(arg[i],"-i")==0||strcmp(arg[i],"--interactive")==0){
+				mode=0;
+				break;
+			}else if(strcmp(arg[i],"-c")==0){
+				if(strcmp(arg[++i],"true")==0){
+					//it should have already been detected, if it wasn't I cant do anything
+				}else if(strcmp(arg[++i],"false")==0){
+					chromatic=false;
+				}else{
+					fprintf(stderr,"The syntax for -c is '-c (true/false)'. Arg ignored");
+					continue;//they messed this arg, but this will allow the other args to work
+				}
+			}else if(strcmp(arg[i],"--color=false")==0){
+				chromatic=false;
+			}else if(strcmp(arg[i],"-m")==0){
+				if(strcmp(arg[++i],"1")==0){
+					//already set to 1, keeping statement for future use and because it increments i
+				}else if(strcmp(arg[i],"2")==0){
+					mode=2;
+				}else{
+					fprintf(stderr,"The syntax for -m is '-m (valid screensaver number'. Arg ignored");
+					continue;//they messed this arg, but this will allow the other args to work
+
+				}
+			}
 		}
-		while(currChar!='Y'&&currChar!='N');
-		if(currChar=='Y'){
-			chromatic=true;
+		if(mode==0){
+			printw("%d%d",COLORS,COLOR_PAIRS);
+			mvprintw(1,0,"Do you want color? Y/N");
+			do{
+				currChar=getch();
+			}
+			while(currChar!='Y'&&currChar!='N');
+			if(currChar=='Y'){
+				chromatic=true;
+			}else{
+				chromatic=false;
+			}
+			mvprintw(2,0,"Which mode do you want? 1) Starfall 2) Flames");
+			do{
+				currChar=getch();
+			}
+			while(currChar!='1'&&currChar!='2');
+			if(currChar=='1'){
+				screensaver(1);
+			}else{
+				screensaver(2);
+			}
 		}else{
-			chromatic=false;
-		}
-		mvprintw(2,0,"Which mode do you want? 1) Starfall 2) Flames");
-		do{
-			currChar=getch();
-		}
-		while(currChar!='1'&&currChar!='2');
-		if(currChar=='1'){
-			screensaver(1);
-		}else{
-			screensaver(2);
+			screensaver(mode);
 		}
 	}
 	endwin();
@@ -76,13 +108,9 @@ void screensaver(int choice){//handles screensavers, to keep the stack to a mini
 	}
 }
 
-int options(int previous){//make into new window later
-//	if(chromatic){
-//		color_set(COLOR_PAIR(0),NULL);
-//	}
-//	wstandend(optionsWin);
+int options(int previous){
 	wredrawln(optionsWin,0,2);
-//	mvprintw(0,0,"1) Starfall 2) Flames r) Go back to previous q) quit");
+//	mvprintw(0,0,"1) Starfall 2) Flames r) Go back to previous q) quit"); already done in main
 	while(1==1){
 		switch(wgetch(optionsWin)){
 			case '1':
