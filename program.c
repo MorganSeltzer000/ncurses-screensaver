@@ -29,7 +29,7 @@ int main(int argNum,char *arg[]){
 		start_color();
 	}
 	if(argNum==1){
-		printw("Press any key to begin maxY=%d,maxX=%d",maxY,maxX);
+		printw("Press any key to begin");
 		refresh();
 		getch();
 		screensaver(1);
@@ -40,36 +40,41 @@ int main(int argNum,char *arg[]){
 				mode=0;
 				break;
 			}else if(strcmp(arg[i],"-c")==0){
-				if(strcmp(arg[++i],"true")==0){
-					//it should have already been detected, if it wasn't I cant do anything
-				}else if(strcmp(arg[++i],"false")==0){
-					chromatic=false;
+				if(i+1<argNum){
+					if(strcmp(arg[i+1],"true")==0){
+						i++;//it should have already been detected, if it wasn't I cant do anything. Still useful to increment i
+					}else if(strcmp(arg[i+1],"false")==0){
+						chromatic=false;
+					}else{
+						fprintf(stderr,"The syntax for -c is '-c [true/false]'. Arg ignored");
+					}
 				}else{
-					fprintf(stderr,"The syntax for -c is '-c (true/false)'. Arg ignored");
-					continue;//they messed this arg, but this will allow the other args to work
+					fprintf(stderr,"The syntax for -c is '-c [true/false]'. Arg ignored");//fails because no arg after
 				}
 			}else if(strcmp(arg[i],"--color=false")==0){
 				chromatic=false;
 			}else if(strcmp(arg[i],"-m")==0){
-				if(strcmp(arg[++i],"1")==0){
-					//already set to 1, keeping statement for future use and because it increments i
-				}else if(strcmp(arg[i],"2")==0){
-					mode=2;
+				if(i+1<argNum){
+					if(strcmp(arg[i+1],"1")==0){
+						i++;//already set to 1, keeping statement for future use and because it increments i
+					}else if(strcmp(arg[i+1],"2")==0){
+						i++;
+						mode=2;
+					}else{
+						fprintf(stderr,"The syntax for -m is '-m [valid screensaver number]'. Arg ignored\n");
+					}
 				}else{
-					fprintf(stderr,"The syntax for -m is '-m (valid screensaver number'. Arg ignored");
-					continue;//they messed this arg, but this will allow the other args to work
-
+					fprintf(stderr,"The syntax for -m is '-m [valid screensaver number]'. Arg ignored\n");//no arg after
 				}
 			}
 		}
 		if(mode==0){
-			printw("%d%d",COLORS,COLOR_PAIRS);
-			mvprintw(1,0,"Do you want color? Y/N");
+			mvprintw(0,0,"Do you want color? Y/N");
 			do{
 				currChar=getch();
 			}
-			while(currChar!='Y'&&currChar!='N');
-			if(currChar=='Y'){
+			while(currChar!='Y'&&currChar!='N'&&currChar!='y'&&currChar!='n');
+			if(currChar=='Y'||currChar=='y'){
 				chromatic=true;
 			}else{
 				chromatic=false;
